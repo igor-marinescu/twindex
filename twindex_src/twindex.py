@@ -44,9 +44,16 @@ class MyFrame(wx.Frame):
         self.buttons = []
         for i in range(0, 2):
             self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "Button &"+str(i)))
-            self.sizer2.Add(self.buttons[i], proportion=0, flag=wx.ALL, border=5)
+            self.sizer2.Add(self.buttons[i], proportion=0, flag=wx.ALL, border=2)
 
         self.sizer2.AddStretchSpacer()
+
+        self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "+"))
+        self.sizer2.Add(self.buttons[2], proportion=0, flag=wx.ALL, border=2)
+
+        self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "-"))
+        self.sizer2.Add(self.buttons[3], proportion=0, flag=wx.ALL, border=2)
+
         self.panel2.SetSizer(self.sizer2)
 
         #Layout sizers
