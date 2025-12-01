@@ -20,18 +20,11 @@ class MyFrame(wx.Frame):
                           "List control report",
                           size=(380, 220))
 
-        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.buttons = []
-        for i in range(0, 6):
-            self.buttons.append(wx.Button(self, -1, "Button &"+str(i)))
-            self.sizer2.Add(self.buttons[i], 1, wx.EXPAND)
+        # Centre List ----------------------------------------------------------
+        self.panel1 = wx.Panel(self)
+        self.sizer1 = wx.BoxSizer(wx.VERTICAL)
 
-        id = wx.NewIdRef()
-        self.list = wx.ListCtrl(self, id,
-                                style=wx.LC_REPORT|
-                                      wx.SUNKEN_BORDER)
-
-        # Add some columns
+        self.list = wx.ListCtrl(self.panel1, wx.NewIdRef(), style=wx.LC_REPORT | wx.SUNKEN_BORDER)
         self.list.InsertColumn(0, "Data #1")
         self.list.InsertColumn(1, "Data #2")
 
@@ -41,19 +34,62 @@ class MyFrame(wx.Frame):
             for col, text in enumerate(item[1:]):
                 self.list.SetItem(index, col+1, text)
 
-        # Set the width of the columns
-        self.list.SetColumnWidth(0, 120)
-        self.list.SetColumnWidth(1, 120)
+        self.sizer1.Add(self.list, 1, wx.EXPAND | wx.ALL, 5)
+        self.panel1.SetSizer(self.sizer1)
 
-        # Use some sizers to see layout options
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.list, 1, wx.EXPAND)
-        self.sizer.Add(self.sizer2, 0, wx.EXPAND)
+        # Bottom Buttons -------------------------------------------------------
+        self.panel2 = wx.Panel(self)
+        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.buttons = []
+        for i in range(0, 2):
+            self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "Button &"+str(i)))
+            self.sizer2.Add(self.buttons[i], proportion=0, flag=wx.ALL, border=5)
+
+        self.sizer2.AddStretchSpacer()
+        self.panel2.SetSizer(self.sizer2)
 
         #Layout sizers
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.panel1, 1, wx.EXPAND | wx.ALL)
+        self.sizer.Add(self.panel2, 0, wx.EXPAND | wx.ALL)
+
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
         self.sizer.Fit(self)
+        self.SetSize(wx.DefaultCoord, wx.DefaultCoord, 600, 500)
+        self.Bind(wx.EVT_SIZE, self.on_size)
+
+    def on_size(self, event):
+        # Why use wx.CallAfter()? Without it, resizing may happen before 
+        # the layout is complete, and column sizes may be wrong.
+        # CallAfter forces resizing AFTER the UI finishes laying out.
+        wx.CallAfter(self.resize_columns)
+        event.Skip()
+
+    def list_has_vertical_scrollbar(self, listctrl):
+        count = listctrl.GetItemCount()
+        if count == 0:
+            return False
+
+        item_height = listctrl.GetItemRect(0).height
+        total_height = item_height * count
+        client_height = listctrl.GetClientSize().height
+
+        return total_height > client_height
+    
+    def resize_columns(self):
+
+        width = self.list.GetClientSize().width
+
+        # If there's a vertical scrollbar, compensate for its width
+        if self.list_has_vertical_scrollbar(self.list):
+            width -= wx.SystemSettings.GetMetric(wx.SYS_VSCROLL_X)
+
+        col_width = width // 2
+
+        self.list.SetColumnWidth(0, col_width)
+        self.list.SetColumnWidth(1, col_width)
 
 #---------------------------------------------------------------------------
 
