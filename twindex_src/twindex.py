@@ -1,4 +1,5 @@
 import wx
+import configparser
 
 # class MyFrame
 # class MyApp
@@ -47,13 +48,6 @@ class MyFrame(wx.Frame):
             self.sizer2.Add(self.buttons[i], proportion=0, flag=wx.ALL, border=2)
 
         self.sizer2.AddStretchSpacer()
-
-        self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "+"))
-        self.sizer2.Add(self.buttons[2], proportion=0, flag=wx.ALL, border=2)
-
-        self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "-"))
-        self.sizer2.Add(self.buttons[3], proportion=0, flag=wx.ALL, border=2)
-
         self.panel2.SetSizer(self.sizer2)
 
         #Layout sizers
@@ -66,6 +60,8 @@ class MyFrame(wx.Frame):
         self.sizer.Fit(self)
         self.SetSize(wx.DefaultCoord, wx.DefaultCoord, 600, 500)
         self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.read_settings()
 
     def on_size(self, event):
         # Why use wx.CallAfter()? Without it, resizing may happen before 
@@ -73,6 +69,26 @@ class MyFrame(wx.Frame):
         # CallAfter forces resizing AFTER the UI finishes laying out.
         wx.CallAfter(self.resize_columns)
         event.Skip()
+
+    def on_close(self, evt):
+        self.write_settings()
+        self.Destroy()
+
+    def read_settings(self):
+        config = configparser.ConfigParser()
+        config.read("settings.ini")
+        try:
+            self.SetSize(eval(config["window"]["position"]))
+        except:
+            # [window] position in the config file has an invalid value, ignore
+            pass
+
+    def write_settings(self):
+        config = configparser.ConfigParser()
+        config["window"] = {}
+        config["window"]["position"] = repr(self.GetRect())
+        with open("settings.ini", 'w') as config_file:
+            config.write(config_file)        
 
     def list_has_vertical_scrollbar(self, listctrl):
         count = listctrl.GetItemCount()
