@@ -58,14 +58,20 @@ class MyFrame(wx.Frame):
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
         self.sizer.Fit(self)
+
+        self.saved_frame_rect = None
         self.SetSize(wx.DefaultCoord, wx.DefaultCoord, 600, 500)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_CLOSE, self.on_close)
-        self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
+        self.Bind(wx.EVT_MOVE_END, self.on_move_end)
         self.read_settings()
 
+    def on_move_end(self, event):
+        if not self.IsMaximized():
+            self.saved_frame_rect = self.GetRect()
+        event.Skip()
+
     def on_size(self, event):
-        print(str(self.GetRect()))
         # Why use wx.CallAfter()? Without it, resizing may happen before 
         # the layout is complete, and column sizes may be wrong.
         # CallAfter forces resizing AFTER the UI finishes laying out.
@@ -76,23 +82,25 @@ class MyFrame(wx.Frame):
         self.write_settings()
         self.Destroy()
 
-    def on_maximize(self, event):
-        event.Skip()
-        
     def read_settings(self):
         config = configparser.ConfigParser()
         config.read("settings.ini")
         try:
-            self.SetSize(eval(config["window"]["position"]))
+            self.saved_frame_rect = eval(config["window"]["position"])
+            self.SetSize(self.saved_frame_rect)
         except:
             # [window] position in the config file has an invalid value, ignore
+            pass
+        try:
+            if(eval(config["window"]["maximized"])):
+                self.Maximize()
+        except:
             pass
 
     def write_settings(self):
         config = configparser.ConfigParser()
         config["window"] = {}
-        if not self.IsMaximized():
-            config["window"]["position"] = repr(self.GetRect())
+        config["window"]["position"] = repr(self.saved_frame_rect)
         config["window"]["maximized"] = repr(self.IsMaximized())
 
         with open("settings.ini", 'w') as config_file:
