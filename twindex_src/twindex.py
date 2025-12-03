@@ -1,5 +1,5 @@
 import wx
-import configparser
+import settings
 
 # class MyFrame
 # class MyApp
@@ -17,9 +17,15 @@ data = [("World", "Python"),
 class MyFrame(wx.Frame):
 
     def __init__(self):
-        wx.Frame.__init__(self, None, -1,
-                          "List control report",
-                          size=(380, 220))
+        wx.Frame.__init__(self, None, -1, "List control report")
+
+        # Top Locations --------------------------------------------------------
+        self.panel0 = wx.Panel(self)
+        self.sizer0 = wx.BoxSizer(wx.HORIZONTAL)
+        self.text1 = wx.TextCtrl(self.panel0, wx.ID_ANY)
+
+        self.sizer0.Add(self.text1, 1, wx.EXPAND | wx.ALL, 5)
+        self.panel0.SetSizer(self.sizer0)
 
         # Centre List ----------------------------------------------------------
         self.panel1 = wx.Panel(self)
@@ -52,6 +58,7 @@ class MyFrame(wx.Frame):
 
         #Layout sizers
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.panel0, 0, wx.EXPAND | wx.ALL)
         self.sizer.Add(self.panel1, 1, wx.EXPAND | wx.ALL)
         self.sizer.Add(self.panel2, 0, wx.EXPAND | wx.ALL)
 
@@ -59,16 +66,13 @@ class MyFrame(wx.Frame):
         self.SetAutoLayout(1)
         self.sizer.Fit(self)
 
-        self.saved_frame_rect = None
-        self.SetSize(wx.DefaultCoord, wx.DefaultCoord, 600, 500)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_CLOSE, self.on_close)
         self.Bind(wx.EVT_MOVE_END, self.on_move_end)
-        self.read_settings()
+        self.settings = settings.Settings(self)
 
     def on_move_end(self, event):
-        if not self.IsMaximized():
-            self.saved_frame_rect = self.GetRect()
+        self.settings.frame_moved()
         event.Skip()
 
     def on_size(self, event):
@@ -79,32 +83,8 @@ class MyFrame(wx.Frame):
         event.Skip()
 
     def on_close(self, evt):
-        self.write_settings()
+        self.settings.write()
         self.Destroy()
-
-    def read_settings(self):
-        config = configparser.ConfigParser()
-        config.read("settings.ini")
-        try:
-            self.saved_frame_rect = eval(config["window"]["position"])
-            self.SetSize(self.saved_frame_rect)
-        except:
-            # [window] position in the config file has an invalid value, ignore
-            pass
-        try:
-            if(eval(config["window"]["maximized"])):
-                self.Maximize()
-        except:
-            pass
-
-    def write_settings(self):
-        config = configparser.ConfigParser()
-        config["window"] = {}
-        config["window"]["position"] = repr(self.saved_frame_rect)
-        config["window"]["maximized"] = repr(self.IsMaximized())
-
-        with open("settings.ini", 'w') as config_file:
-            config.write(config_file)        
 
     def list_has_vertical_scrollbar(self, listctrl):
         count = listctrl.GetItemCount()
