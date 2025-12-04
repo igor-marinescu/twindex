@@ -19,19 +19,25 @@ class MyFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, -1, "List control report")
 
-        # Top Locations --------------------------------------------------------
-        self.panel0 = wx.Panel(self)
-        self.sizer0 = wx.BoxSizer(wx.HORIZONTAL)
-        self.text1 = wx.TextCtrl(self.panel0, wx.ID_ANY)
+        # Main -----------------------------------------------------------------
+        self.pnl_main = wx.Panel(self)
+        self.szr_main = wx.BoxSizer(wx.VERTICAL)
 
-        self.sizer0.Add(self.text1, 1, wx.EXPAND | wx.ALL, 5)
-        self.panel0.SetSizer(self.sizer0)
+        # Top ------------------------------------------------------------------
+        self.pnl_top = wx.Panel(self.pnl_main)
+        self.siz_top = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl1 = wx.StaticText(self.pnl_top, wx.ID_ANY, label='Folder &1:')
+        self.txt1 = wx.TextCtrl(self.pnl_top, wx.ID_ANY)
 
-        # Centre List ----------------------------------------------------------
-        self.panel1 = wx.Panel(self)
-        self.sizer1 = wx.BoxSizer(wx.VERTICAL)
+        self.siz_top.Add(self.lbl1, proportion=0, flag=wx.ALL, border=5)
+        self.siz_top.Add(self.txt1, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
+        self.pnl_top.SetSizer(self.siz_top)
 
-        self.list = wx.ListCtrl(self.panel1, wx.NewIdRef(), style=wx.LC_REPORT | wx.SUNKEN_BORDER)
+        # Center ---------------------------------------------------------------
+        self.pnl_center = wx.Panel(self.pnl_main)
+        self.siz_center = wx.BoxSizer(wx.VERTICAL)
+
+        self.list = wx.ListCtrl(self.pnl_center, wx.NewIdRef(), style=wx.LC_REPORT | wx.LC_HRULES)
         self.list.InsertColumn(0, "Data #1")
         self.list.InsertColumn(1, "Data #2")
 
@@ -41,30 +47,28 @@ class MyFrame(wx.Frame):
             for col, text in enumerate(item[1:]):
                 self.list.SetItem(index, col+1, text)
 
-        self.sizer1.Add(self.list, 1, wx.EXPAND | wx.ALL, 5)
-        self.panel1.SetSizer(self.sizer1)
+        self.siz_center.Add(self.list, 1, wx.EXPAND | wx.ALL, 5)
+        self.pnl_center.SetSizer(self.siz_center)
 
-        # Bottom Buttons -------------------------------------------------------
-        self.panel2 = wx.Panel(self)
-        self.sizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        # Bottom ---------------------------------------------------------------
+        self.pnl_bottom = wx.Panel(self.pnl_main)
+        self.siz_bottom = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.buttons = []
-        for i in range(0, 2):
-            self.buttons.append(wx.Button(self.panel2, wx.NewIdRef(), "Button &"+str(i)))
-            self.sizer2.Add(self.buttons[i], proportion=0, flag=wx.ALL, border=2)
+        self.btn_1 = wx.Button(self.pnl_bottom, wx.NewIdRef(), "Open &Left")
+        self.btn_1.Bind(wx.EVT_BUTTON, self.on_btn1)
+        self.siz_bottom.Add(self.btn_1, proportion=0, flag=wx.ALL, border=2)
 
-        self.sizer2.AddStretchSpacer()
-        self.panel2.SetSizer(self.sizer2)
+        self.siz_bottom.AddStretchSpacer()
+        self.pnl_bottom.SetSizer(self.siz_bottom)
 
-        #Layout sizers
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.panel0, 0, wx.EXPAND | wx.ALL)
-        self.sizer.Add(self.panel1, 1, wx.EXPAND | wx.ALL)
-        self.sizer.Add(self.panel2, 0, wx.EXPAND | wx.ALL)
+        # Layout sizers --------------------------------------------------------
+        self.szr_main.Add(self.pnl_top, 0, wx.EXPAND | wx.ALL)
+        self.szr_main.Add(self.pnl_center, 1, wx.EXPAND | wx.ALL)
+        self.szr_main.Add(self.pnl_bottom, 0, wx.EXPAND | wx.ALL)
+        self.pnl_main.SetSizer(self.szr_main)
 
-        self.SetSizer(self.sizer)
-        self.SetAutoLayout(1)
-        self.sizer.Fit(self)
+        #self.SetAutoLayout(1)
+        #self.szr_main.Fit(self)
 
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_CLOSE, self.on_close)
@@ -109,6 +113,9 @@ class MyFrame(wx.Frame):
 
         self.list.SetColumnWidth(0, col_width)
         self.list.SetColumnWidth(1, col_width)
+
+    def on_btn1(self, event):
+        print("Button")
 
 #---------------------------------------------------------------------------
 
