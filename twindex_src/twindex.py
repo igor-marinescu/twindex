@@ -24,20 +24,61 @@ class MyFrame(wx.Frame):
         self.szr_main = wx.BoxSizer(wx.VERTICAL)
 
         # Top ------------------------------------------------------------------
-        self.pnl_top = wx.Panel(self.pnl_main)
-        self.siz_top = wx.BoxSizer(wx.HORIZONTAL)
-        self.lbl1 = wx.StaticText(self.pnl_top, wx.ID_ANY, label='Folder &1:')
-        self.txt1 = wx.TextCtrl(self.pnl_top, wx.ID_ANY)
+        self.siz_dir1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_dir1 = wx.StaticText(self.pnl_main, wx.ID_ANY, label='Folder &1:')
+        self.txt_dir1 = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.btn_dir1 = wx.Button(self.pnl_main, wx.ID_ANY, "Browse...")
 
-        self.siz_top.Add(self.lbl1, proportion=0, flag=wx.ALL, border=5)
-        self.siz_top.Add(self.txt1, proportion=1, flag=wx.EXPAND | wx.ALL, border=5)
-        self.pnl_top.SetSizer(self.siz_top)
+        self.siz_dir1.Add(self.lbl_dir1, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT|wx.TOP, border=5)
+        self.siz_dir1.Add(self.txt_dir1, proportion=1, flag=wx.EXPAND|wx.LEFT|wx.TOP|wx.RIGHT, border=5)
+        self.siz_dir1.Add(self.btn_dir1, flag=wx.TOP|wx.RIGHT, border=5)
+
+        self.siz_dir2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_dir2 = wx.StaticText(self.pnl_main, wx.ID_ANY, label='Folder &2:')
+        self.txt_dir2 = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.btn_dir2 = wx.Button(self.pnl_main, wx.ID_ANY, "Browse...")
+
+        self.siz_dir2.Add(self.lbl_dir2, flag=wx.ALIGN_CENTER_VERTICAL|wx.LEFT, border=5)
+        self.siz_dir2.Add(self.txt_dir2, proportion=1, flag=wx.EXPAND|wx.ALL, border=5)
+        self.siz_dir2.Add(self.btn_dir2, flag=wx.TOP|wx.RIGHT, border=5)
 
         # Center ---------------------------------------------------------------
-        self.pnl_center = wx.Panel(self.pnl_main)
         self.siz_center = wx.BoxSizer(wx.VERTICAL)
+        self.list = wx.ListCtrl(self.pnl_main, wx.NewIdRef(), style=wx.LC_REPORT | wx.LC_HRULES)
+        self.siz_center.Add(self.list, 1, wx.EXPAND|wx.LEFT|wx.RIGHT, 5)
 
-        self.list = wx.ListCtrl(self.pnl_center, wx.NewIdRef(), style=wx.LC_REPORT | wx.LC_HRULES)
+        # Bottom ---------------------------------------------------------------
+        self.siz_bottom = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn_open1 = wx.Button(self.pnl_main, wx.NewIdRef(), "Open &Left")
+        self.btn_del1 = wx.Button(self.pnl_main, wx.NewIdRef(), "Delete Left")
+        self.btn_search = wx.Button(self.pnl_main, wx.NewIdRef(), "Search")
+        self.btn_del2 = wx.Button(self.pnl_main, wx.NewIdRef(), "Delete Right")
+        self.btn_open2 = wx.Button(self.pnl_main, wx.NewIdRef(), "Open &Right")
+
+        self.siz_bottom.Add(self.btn_open1, flag=wx.ALL, border=5)
+        self.siz_bottom.Add(self.btn_del1, flag=wx.TOP, border=5)
+        self.siz_bottom.AddStretchSpacer()
+        self.siz_bottom.Add(self.btn_search, proportion=1, flag=wx.ALL, border=5)
+        self.siz_bottom.AddStretchSpacer()
+        self.siz_bottom.Add(self.btn_del2, flag=wx.TOP, border=5)
+        self.siz_bottom.Add(self.btn_open2, flag=wx.ALL, border=5)
+
+        # ----------------------------------------------------------------------
+        self.szr_main.Add(self.siz_dir1, flag=wx.EXPAND)
+        self.szr_main.Add(self.siz_dir2, flag=wx.EXPAND)
+        self.szr_main.Add(self.siz_center, proportion=1, flag=wx.EXPAND)
+        self.szr_main.Add(self.siz_bottom, flag=wx.EXPAND)
+        self.pnl_main.SetSizer(self.szr_main)
+
+        #self.SetAutoLayout(1)
+        #self.szr_main.Fit(self)
+
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.Bind(wx.EVT_MOVE_END, self.on_move_end)
+        self.btn_open1.Bind(wx.EVT_BUTTON, self.on_btn1)
+
+        # Add data to list
         self.list.InsertColumn(0, "Data #1")
         self.list.InsertColumn(1, "Data #2")
 
@@ -47,33 +88,11 @@ class MyFrame(wx.Frame):
             for col, text in enumerate(item[1:]):
                 self.list.SetItem(index, col+1, text)
 
-        self.siz_center.Add(self.list, 1, wx.EXPAND | wx.ALL, 5)
-        self.pnl_center.SetSizer(self.siz_center)
-
-        # Bottom ---------------------------------------------------------------
-        self.pnl_bottom = wx.Panel(self.pnl_main)
-        self.siz_bottom = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.btn_1 = wx.Button(self.pnl_bottom, wx.NewIdRef(), "Open &Left")
-        self.btn_1.Bind(wx.EVT_BUTTON, self.on_btn1)
-        self.siz_bottom.Add(self.btn_1, proportion=0, flag=wx.ALL, border=2)
-
-        self.siz_bottom.AddStretchSpacer()
-        self.pnl_bottom.SetSizer(self.siz_bottom)
-
-        # Layout sizers --------------------------------------------------------
-        self.szr_main.Add(self.pnl_top, 0, wx.EXPAND | wx.ALL)
-        self.szr_main.Add(self.pnl_center, 1, wx.EXPAND | wx.ALL)
-        self.szr_main.Add(self.pnl_bottom, 0, wx.EXPAND | wx.ALL)
-        self.pnl_main.SetSizer(self.szr_main)
-
-        #self.SetAutoLayout(1)
-        #self.szr_main.Fit(self)
-
-        self.Bind(wx.EVT_SIZE, self.on_size)
-        self.Bind(wx.EVT_CLOSE, self.on_close)
-        self.Bind(wx.EVT_MOVE_END, self.on_move_end)
         self.settings = settings.Settings(self)
+
+    def on_key_combo(self, event):
+        window = self.FindWindowById(self.acc_dict[event.GetId()])
+        window.SetFocus()
 
     def on_move_end(self, event):
         self.settings.frame_moved()
