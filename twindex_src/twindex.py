@@ -75,6 +75,8 @@ class MyFrame(wx.Frame):
         self.btn_dir2.Bind(wx.EVT_BUTTON, self.on_btn_browse)
         self.btn_open_l.Bind(wx.EVT_BUTTON, self.on_btn_open)
         self.btn_open_r.Bind(wx.EVT_BUTTON, self.on_btn_open)
+        self.btn_del_l.Bind(wx.EVT_BUTTON, self.on_btn_delete)
+        self.btn_del_r.Bind(wx.EVT_BUTTON, self.on_btn_delete)
         self.btn_search.Bind(wx.EVT_BUTTON, self.on_btn_search)
 
         # Populate Data --------------------------------------------------------
@@ -87,6 +89,7 @@ class MyFrame(wx.Frame):
         self.list.InsertColumn(1, "File 2")
         self.list.InsertColumn(2, "Size")
 
+    #---------------------------------------------------------------------------
     def on_close(self, evt):
         """ Event called when Frame is closed
             Save the settings and destroy the Frame
@@ -96,10 +99,17 @@ class MyFrame(wx.Frame):
         self.settings.write()
         self.Destroy()
 
+    #---------------------------------------------------------------------------
     def on_move_end(self, event):
+        """ Event called when user finished moving the Frame
+            Remember the new Frame's position in the settings - we need this
+            in case the user closes the App and the Frame in maximized
+            (we have to store Frame's position every time when not maximized)
+        """
         self.settings.frame_moved()
         event.Skip()
 
+    #---------------------------------------------------------------------------
     def on_size(self, event):
         # Why use wx.CallAfter()? Without it, resizing may happen before 
         # the layout is complete, and column sizes may be wrong.
@@ -107,6 +117,7 @@ class MyFrame(wx.Frame):
         wx.CallAfter(self.resize_columns)
         event.Skip()
 
+    #---------------------------------------------------------------------------
     def list_has_vertical_scrollbar(self, listctrl):
         count = listctrl.GetItemCount()
         if count == 0:
@@ -118,6 +129,7 @@ class MyFrame(wx.Frame):
 
         return total_height > client_height
     
+    #---------------------------------------------------------------------------
     def resize_columns(self):
 
         width = self.list.GetClientSize().width
@@ -132,6 +144,7 @@ class MyFrame(wx.Frame):
         self.list.SetColumnWidth(1, col_width)
         self.list.SetColumnWidth(2, 100)
 
+    #---------------------------------------------------------------------------
     def on_btn_open(self, event):
         left = False
         if event == None:
@@ -143,6 +156,41 @@ class MyFrame(wx.Frame):
         else:
             return
 
+    #---------------------------------------------------------------------------
+    def on_btn_delete(self, event):
+        """ Event called when one of Delete (left or right) buttons are pressed
+        """
+        item_column = 0
+        if event.GetId() == self.btn_del_r.GetId():
+            item_column = 1
+
+        selected = self.list.GetFirstSelected()
+        while selected >= 0:
+            item_text = self.list.GetItemText(selected, item_column)
+
+            strs = item_text + "\nAre you sure?"
+            dlg = wx.MessageDialog(self, strs, "Delete File", wx.YES_NO|wx.NO_DEFAULT|wx.CANCEL|wx.ICON_QUESTION)
+            res = dlg.ShowModal()
+            dlg.Destroy()
+
+            if res == wx.ID_YES:
+                try:
+                    os.remove(item_text)  
+                except:
+                    strs = "Cannot delete file:\n" + item_text
+                    dlg = wx.MessageDialog(self, strs, "Error", style=wx.OK|wx.ICON_ERROR)
+                    dlg.ShowModal()
+                    dlg.Destroy()
+                    break
+
+                self.list_delete_item_by_name(item_text)
+
+            elif res == wx.ID_CANCEL:
+                break
+
+            selected = self.list.GetNextSelected(selected)
+
+    #---------------------------------------------------------------------------
     def on_btn_browse(self, event):
         """ Event called when Browse Dir1 or Browse Dir2 is pressed
         """
@@ -156,6 +204,7 @@ class MyFrame(wx.Frame):
             txt_ctrl.Clear()
             txt_ctrl.AppendText(dlg.GetPath())
 
+    #---------------------------------------------------------------------------
     def on_btn_search(self, event):
         """ Event called when Search Button is pressed
             Invoke TwinFinder and search for duplicate files
@@ -183,6 +232,7 @@ class MyFrame(wx.Frame):
         if err_text:
             dlg = wx.MessageDialog(self, err_text, caption="Error", style=wx.OK|wx.ICON_ERROR)
             dlg.ShowModal()
+            dlg.Destroy()
             return
 
         self.list.DeleteAllItems()
@@ -193,8 +243,20 @@ class MyFrame(wx.Frame):
             self.list.SetItem(index, 1, t_rec[2])
             self.list.SetItem(index, 2, str(t_rec[0]))
 
-#---------------------------------------------------------------------------
+    #---------------------------------------------------------------------------
+    def list_delete_item_by_name(self, name):
+        """ Iterate through the list and delete all items having name
+        """
+        while True:
+            for item_idx in range(self.list.GetItemCount()):
+                if (self.list.GetItemText(item_idx, 0) == name) \
+                or (self.list.GetItemText(item_idx, 1) == name):
+                    self.list.DeleteItem(item_idx)
+                    break
+            else:
+                break
 
+#---------------------------------------------------------------------------
 class MyApp(wx.App):
     def OnInit(self):
 
