@@ -2,6 +2,8 @@ import os
 import wx
 import settings
 import twin_finder
+import subprocess
+import filter
 
 # class MyFrame
 # class MyApp
@@ -45,7 +47,8 @@ class MyFrame(wx.Frame):
         self.siz_bottom = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_open_l = wx.Button(self.pnl_main, wx.NewIdRef(), "Open &Left")
         self.btn_del_l = wx.Button(self.pnl_main, wx.NewIdRef(), "Delete Left")
-        self.btn_search = wx.Button(self.pnl_main, wx.NewIdRef(), "Search")
+        self.btn_search = wx.Button(self.pnl_main, wx.NewIdRef(), "&Search")
+        self.btn_filter = wx.Button(self.pnl_main, wx.NewIdRef(), "&Filter")
         self.btn_del_r = wx.Button(self.pnl_main, wx.NewIdRef(), "Delete Right")
         self.btn_open_r = wx.Button(self.pnl_main, wx.NewIdRef(), "Open &Right")
 
@@ -53,6 +56,7 @@ class MyFrame(wx.Frame):
         self.siz_bottom.Add(self.btn_del_l, flag=wx.TOP, border=5)
         self.siz_bottom.AddStretchSpacer()
         self.siz_bottom.Add(self.btn_search, proportion=1, flag=wx.ALL, border=5)
+        self.siz_bottom.Add(self.btn_filter, flag=wx.TOP, border=5)
         self.siz_bottom.AddStretchSpacer()
         self.siz_bottom.Add(self.btn_del_r, flag=wx.TOP, border=5)
         self.siz_bottom.Add(self.btn_open_r, flag=wx.ALL, border=5)
@@ -78,6 +82,7 @@ class MyFrame(wx.Frame):
         self.btn_del_l.Bind(wx.EVT_BUTTON, self.on_btn_delete)
         self.btn_del_r.Bind(wx.EVT_BUTTON, self.on_btn_delete)
         self.btn_search.Bind(wx.EVT_BUTTON, self.on_btn_search)
+        self.btn_filter.Bind(wx.EVT_BUTTON, self.on_btn_filter)
 
         # Populate Data --------------------------------------------------------
         self.settings = settings.Settings(self)
@@ -88,6 +93,27 @@ class MyFrame(wx.Frame):
         self.list.InsertColumn(0, "File 1")
         self.list.InsertColumn(1, "File 2")
         self.list.InsertColumn(2, "Size")
+
+        self.enable_buttons()
+
+    #---------------------------------------------------------------------------
+    def enable_buttons(self, enable=None):
+        """ Enable or disable Open/Delete buttons
+        """
+        if not enable:
+            enable = self.list.GetItemCount() > 0
+        self.btn_open_l.Enable(enable)
+        self.btn_del_l.Enable(enable)
+        self.btn_del_r.Enable(enable)
+        self.btn_open_r.Enable(enable)
+
+    #---------------------------------------------------------------------------
+    def error_box(self, text, caption = "Error"):
+        """ Display Message Box with an Error message
+        """
+        dlg = wx.MessageDialog(self, text, caption, style=wx.OK|wx.ICON_ERROR)
+        dlg.ShowModal()
+        dlg.Destroy()
 
     #---------------------------------------------------------------------------
     def on_close(self, evt):
@@ -146,15 +172,19 @@ class MyFrame(wx.Frame):
 
     #---------------------------------------------------------------------------
     def on_btn_open(self, event):
-        left = False
-        if event == None:
-            return
-        if event.GetId() == self.btn_open_l.GetId():
-            print("Button Left")
-        elif event.GetId() == self.btn_open_r.GetId():
-            print("Button Right")
+        """ Event called when one of Open (left or right) buttons are pressed
+        """
+        item_column = 0
+        if event.GetId() == self.btn_open_r.GetId():
+            item_column = 1
+
+        selected = self.list.GetFirstSelected()
+        if selected >= 0:
+            item_text = self.list.GetItemText(selected, item_column)
+            explorer_cmd = r'explorer /select,"' + item_text + r'"'
+            subprocess.Popen(explorer_cmd)
         else:
-            return
+            self.error_box("No file selected")
 
     #---------------------------------------------------------------------------
     def on_btn_delete(self, event):
@@ -165,6 +195,9 @@ class MyFrame(wx.Frame):
             item_column = 1
 
         selected = self.list.GetFirstSelected()
+        if selected < 0:
+            self.error_box("No file selected")
+            return
         while selected >= 0:
             item_text = self.list.GetItemText(selected, item_column)
 
@@ -177,13 +210,11 @@ class MyFrame(wx.Frame):
                 try:
                     os.remove(item_text)  
                 except:
-                    strs = "Cannot delete file:\n" + item_text
-                    dlg = wx.MessageDialog(self, strs, "Error", style=wx.OK|wx.ICON_ERROR)
-                    dlg.ShowModal()
-                    dlg.Destroy()
+                    self.error_box("Cannot delete file:\n" + item_text)
                     break
 
                 self.list_delete_item_by_name(item_text)
+                self.enable_buttons()
 
             elif res == wx.ID_CANCEL:
                 break
@@ -217,22 +248,20 @@ class MyFrame(wx.Frame):
             if os.path.isdir(dir1):
                 dir_list.append(dir1)
             else:
-                err_text = "Directory 1 (" + dir1 + ") does not exist"
+                err_text = dir1 + "\ndoes not exist"
                 
         dir2 = self.txt_dir2.GetLineText(0)
         if dir2:
             if os.path.isdir(dir2):
                 dir_list.append(dir2)
             else:
-                err_text = "Directory 2 (" + dir2 + ") does not exist"
+                err_text = dir2 + "\ndoes not exist"
 
-        if len(dir_list) == 0:
+        if not err_text and (len(dir_list) == 0):
             err_text = "No directory selected"
 
         if err_text:
-            dlg = wx.MessageDialog(self, err_text, caption="Error", style=wx.OK|wx.ICON_ERROR)
-            dlg.ShowModal()
-            dlg.Destroy()
+            self.error_box(err_text)
             return
 
         self.list.DeleteAllItems()
@@ -242,6 +271,7 @@ class MyFrame(wx.Frame):
             index = self.list.InsertItem(self.list.GetItemCount(), t_rec[1])
             self.list.SetItem(index, 1, t_rec[2])
             self.list.SetItem(index, 2, str(t_rec[0]))
+        self.enable_buttons()
 
     #---------------------------------------------------------------------------
     def list_delete_item_by_name(self, name):
@@ -255,6 +285,15 @@ class MyFrame(wx.Frame):
                     break
             else:
                 break
+
+    #---------------------------------------------------------------------------
+    def on_btn_filter(self, event):
+        """ Event called when Search Button is pressed
+            Invoke TwinFinder and search for duplicate files
+        """
+        dlg = filter.FilterDialog(self)
+        dlg.ShowWindowModal()
+        dlg.Destroy()
 
 #---------------------------------------------------------------------------
 class MyApp(wx.App):
