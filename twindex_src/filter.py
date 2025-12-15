@@ -4,14 +4,9 @@ import wx
 # class MyApp
 
 #---------------------------------------------------------------------------
-filter_text = [
-    "None",
-    "File name =",
-    "File name !=",
-    "File size =",
-    "File size <",
-    "File size >",
-]
+and_or_cmd = ["AND", "OR"]
+only_exclude_list = ["Only Files", "Exclude Files"]
+file_size_cmd_list = ["==", ">", "<", "!="]
 
 #
 # [Only Files/Exclude Files V]
@@ -34,24 +29,64 @@ class FilterDialog(wx.Dialog):
         self.pnl_main = wx.Panel(self)
         self.szr_main = wx.BoxSizer(wx.VERTICAL)
 
-        self.siz_flt = []
-        self.lbl_flt = []
-        self.cmb_flt = []
-        self.txt_flt = []
+        # [Only Files/Exclude Files V]
+        self.cmb_only = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
+        self.cmb_only.Append(only_exclude_list)
+        self.szr_main.Add(self.cmb_only, flag=wx.ALL, border=5)
 
-        for i in range(5):
-            self.siz_flt.append(wx.BoxSizer(wx.HORIZONTAL))
-            self.lbl_flt.append(wx.StaticText(self.pnl_main, wx.ID_ANY, label="Filter &" + str(i+1) + ":"))
-            self.cmb_flt.append(wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY))
-            self.txt_flt.append(wx.TextCtrl(self.pnl_main, wx.ID_ANY))
+        self.szr_main.Add(wx.StaticLine(self.pnl_main), flag=wx.EXPAND|wx.ALL)
 
-            self.cmb_flt[i].Append(filter_text)
+        # File names: [**********]
+        self.siz_fname = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_fname = wx.StaticText(self.pnl_main, wx.ID_ANY, label="&File names:")
+        self.txt_fname = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.siz_fname.Add(self.lbl_fname, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
+        self.siz_fname.Add(self.txt_fname, proportion=1, flag=wx.ALL, border=5)
+        self.szr_main.Add(self.siz_fname, flag=wx.EXPAND)
 
-            self.siz_flt[i].Add(self.lbl_flt[i], flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
-            self.siz_flt[i].Add(self.cmb_flt[i], proportion=1, flag=wx.EXPAND|wx.ALL, border=5)
-            self.siz_flt[i].Add(self.txt_flt[i], flag=wx.ALL, border=5)
+        # [And/Or V]
+        self.cmb_fcmd1 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
+        self.cmb_fcmd1.Append(and_or_cmd)
+        self.szr_main.Add(self.cmb_fcmd1, flag=wx.ALL, border=5)
 
-            self.szr_main.Add(self.siz_flt[i], flag=wx.EXPAND)
+        # Directory names: [********]
+        self.siz_dname = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_dname = wx.StaticText(self.pnl_main, wx.ID_ANY, label="&Dir names:")
+        self.txt_dname = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.siz_dname.Add(self.lbl_dname, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
+        self.siz_dname.Add(self.txt_dname, proportion=1, flag=wx.ALL, border=5)
+        self.szr_main.Add(self.siz_dname, flag=wx.EXPAND)
+
+        self.szr_main.Add(wx.StaticLine(self.pnl_main), flag=wx.EXPAND|wx.ALL)
+
+        # File size: [>,<,=,!= V]
+        self.siz_fsiz1 = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_fsiz1 = wx.StaticText(self.pnl_main, wx.ID_ANY, label="File &size:")
+        self.cmb_fsiz1 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
+        self.txt_fsiz1 = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.cmb_fsiz1.Append(file_size_cmd_list)
+        self.siz_fsiz1.Add(self.lbl_fsiz1, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
+        self.siz_fsiz1.Add(self.cmb_fsiz1, flag=wx.ALL, border=5)
+        self.siz_fsiz1.Add(self.txt_fsiz1, proportion=1, flag=wx.ALL, border=5)
+        self.szr_main.Add(self.siz_fsiz1, flag=wx.EXPAND)
+
+        # [And/Or V]
+        self.cmb_fcmd2 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
+        self.cmb_fcmd2.Append(and_or_cmd)
+        self.szr_main.Add(self.cmb_fcmd2, flag=wx.ALL, border=5)
+
+        # File size: [>,<,=,!= V]
+        self.siz_fsiz2 = wx.BoxSizer(wx.HORIZONTAL)
+        self.lbl_fsiz2 = wx.StaticText(self.pnl_main, wx.ID_ANY, label="File &size:")
+        self.cmb_fsiz2 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
+        self.txt_fsiz2 = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
+        self.cmb_fsiz2.Append(file_size_cmd_list)
+        self.siz_fsiz2.Add(self.lbl_fsiz2, flag=wx.ALIGN_CENTER_VERTICAL|wx.ALL, border=5)
+        self.siz_fsiz2.Add(self.cmb_fsiz2, flag=wx.ALL, border=5)
+        self.siz_fsiz2.Add(self.txt_fsiz2, proportion=1, flag=wx.ALL, border=5)
+        self.szr_main.Add(self.siz_fsiz2, flag=wx.EXPAND)
+
+        self.szr_main.Add(wx.StaticLine(self.pnl_main), flag=wx.EXPAND|wx.ALL)
 
         self.siz_bottom = wx.BoxSizer(wx.HORIZONTAL)
         self.btn_ok = wx.Button(self.pnl_main, wx.ID_OK)
@@ -63,7 +98,6 @@ class FilterDialog(wx.Dialog):
         self.siz_bottom.Add(self.btn_cancel, flag=wx.ALL, border=5)
 
         # ----------------------------------------------------------------------
-        self.szr_main.Add(wx.StaticLine(self.pnl_main), flag=wx.EXPAND|wx.ALL)
         self.szr_main.Add(self.siz_bottom, flag=wx.EXPAND)
         self.pnl_main.SetSizer(self.szr_main)
 
