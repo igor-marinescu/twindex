@@ -291,7 +291,9 @@ class MyFrame(wx.Frame):
         """ Event called when Search Button is pressed
             Invoke TwinFinder and search for duplicate files
         """
-        dlg = filter.FilterDialog(self)
+        filter1 = filter.FilterData()
+        filter1.load(self.settings, "Filter1")
+        dlg = filter.FilterDialog(self, filter1)
         dlg.ShowWindowModal()
         dlg.Destroy()
 

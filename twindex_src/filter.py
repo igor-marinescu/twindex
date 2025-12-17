@@ -1,13 +1,28 @@
 import wx
+import settings
 
 # class MyFrame
 # class MyApp
 
 #---------------------------------------------------------------------------
-and_or_cmd = ["AND", "OR"]
+or_and_cmd = ["OR", "AND"]
 only_exclude_list = ["Only Files", "Exclude Files"]
-file_size_cmd_list = ["==", ">", "<", "!="]
+file_size_cmd_list = ["", "==", ">", "<", "!="]
 
+
+class FilterData:
+
+    def __init__(self):
+        self.exclude_files = 0
+        self.file_names = ""
+        self.dir_names = ""
+        self.file_and_dir = 0
+        self.file_size1 = 0
+        self.file_size2 = 0
+        self.size1_and_size2 = 0
+
+    def load(self, settings, filter_name):
+        self.file_names = settings.get_text(filter_name, "file_names")
 #
 # [Only Files/Exclude Files V]
 #   -------------------------
@@ -22,8 +37,9 @@ file_size_cmd_list = ["==", ">", "<", "!="]
 
 class FilterDialog(wx.Dialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent, filter_data):
         wx.Dialog.__init__(self, parent, id=wx.ID_ANY, title="Filter")
+        self.filter_data = filter_data
 
         # Main -----------------------------------------------------------------
         self.pnl_main = wx.Panel(self)
@@ -46,7 +62,7 @@ class FilterDialog(wx.Dialog):
 
         # [And/Or V]
         self.cmb_fcmd1 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
-        self.cmb_fcmd1.Append(and_or_cmd)
+        self.cmb_fcmd1.Append(or_and_cmd)
         self.szr_main.Add(self.cmb_fcmd1, flag=wx.ALL, border=5)
 
         # Directory names: [********]
@@ -72,12 +88,12 @@ class FilterDialog(wx.Dialog):
 
         # [And/Or V]
         self.cmb_fcmd2 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
-        self.cmb_fcmd2.Append(and_or_cmd)
+        self.cmb_fcmd2.Append(or_and_cmd)
         self.szr_main.Add(self.cmb_fcmd2, flag=wx.ALL, border=5)
 
         # File size: [>,<,=,!= V]
         self.siz_fsiz2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.lbl_fsiz2 = wx.StaticText(self.pnl_main, wx.ID_ANY, label="File &size:")
+        self.lbl_fsiz2 = wx.StaticText(self.pnl_main, wx.ID_ANY, label="File size:")
         self.cmb_fsiz2 = wx.ComboBox(self.pnl_main, wx.ID_ANY, style=wx.CB_READONLY)
         self.txt_fsiz2 = wx.TextCtrl(self.pnl_main, wx.ID_ANY)
         self.cmb_fsiz2.Append(file_size_cmd_list)
@@ -104,11 +120,25 @@ class FilterDialog(wx.Dialog):
         # size the dialog to fit the content managed by the sizer
         self.szr_main.Fit(self)
 
+        # Populate data
+        self.cmb_only.SetSelection(filter_data.exclude_files)
+        self.txt_fname.AppendText(filter_data.file_names)
+        self.cmb_fcmd1.SetSelection(filter_data.file_and_dir)
+        self.txt_dname.AppendText(filter_data.dir_names)
+        self.txt_fsiz1.AppendText(str(filter_data.file_size1))
+        self.cmb_fcmd2.SetSelection(filter_data.size1_and_size2)
+        self.txt_fsiz2.AppendText(str(filter_data.file_size2))
+
 #---------------------------------------------------------------------------
 
 if __name__ == "__main__" :
+
     app = wx.App()
-    dlg = FilterDialog(None)
+
+    filter1 = FilterData()
+    filter1.file_names = "*.txt"
+    
+    dlg = FilterDialog(None, filter1)
     val = dlg.ShowModal()
     dlg.Destroy()
     app.MainLoop() 
