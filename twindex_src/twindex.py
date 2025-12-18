@@ -294,7 +294,9 @@ class MyFrame(wx.Frame):
         filter1 = filter.FilterData()
         filter1.load(self.settings, "Filter1")
         dlg = filter.FilterDialog(self, filter1)
-        dlg.ShowWindowModal()
+        res = dlg.ShowModal()
+        if res == wx.ID_OK:
+             filter1.save(self.settings, "Filter1")
         dlg.Destroy()
 
 #---------------------------------------------------------------------------

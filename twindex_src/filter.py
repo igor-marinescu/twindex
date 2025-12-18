@@ -17,12 +17,18 @@ class FilterData:
         self.file_names = ""
         self.dir_names = ""
         self.file_and_dir = 0
+        self.cmd_size1 = 0
         self.file_size1 = 0
+        self.cmd_size2 = 0
         self.file_size2 = 0
         self.size1_and_size2 = 0
 
     def load(self, settings, filter_name):
         self.file_names = settings.get_text(filter_name, "file_names")
+
+    def save(self, settings, filter_name):
+        settings.set_text(filter_name, "file_names", self.file_names)
+
 #
 # [Only Files/Exclude Files V]
 #   -------------------------
@@ -109,6 +115,8 @@ class FilterDialog(wx.Dialog):
         self.btn_cancel = wx.Button(self.pnl_main, wx.ID_CANCEL)
         self.btn_cancel.SetDefault()
         
+        self.Bind(wx.EVT_BUTTON, self.on_ok_button, self.btn_ok)
+
         self.siz_bottom.AddStretchSpacer()
         self.siz_bottom.Add(self.btn_ok, flag=wx.ALL, border=5)
         self.siz_bottom.Add(self.btn_cancel, flag=wx.ALL, border=5)
@@ -125,9 +133,72 @@ class FilterDialog(wx.Dialog):
         self.txt_fname.AppendText(filter_data.file_names)
         self.cmb_fcmd1.SetSelection(filter_data.file_and_dir)
         self.txt_dname.AppendText(filter_data.dir_names)
+        self.cmb_fsiz1.SetSelection(filter_data.cmd_size1)
         self.txt_fsiz1.AppendText(str(filter_data.file_size1))
         self.cmb_fcmd2.SetSelection(filter_data.size1_and_size2)
+        self.cmb_fsiz2.SetSelection(filter_data.cmd_size2)
         self.txt_fsiz2.AppendText(str(filter_data.file_size2))
+
+    #---------------------------------------------------------------------------
+    def on_ok_button(self, event):
+        """ Event called when user presses OK button
+            Copy all data from UI elements to filter
+        """
+        filter_temp = FilterData()
+        error_text = None
+
+        if self.cmb_only.GetSelection() != wx.NOT_FOUND:
+            filter_temp.exclude_files = self.cmb_only.GetSelection()
+        else:
+            error_text = "Only Files/Exclude Files not selected"
+
+        filter_temp.file_names = self.txt_fname.GetLineText(0)
+
+        filter_temp.file_and_dir = 0
+        if self.cmb_fcmd1.GetSelection() != wx.NOT_FOUND:
+            filter_temp.file_and_dir = self.cmb_fcmd1.GetSelection()
+
+        filter_temp.dir_names = self.txt_dname.GetLineText(0)
+
+        filter_temp.cmd_size1 = 0
+        if self.cmb_fsiz1.GetSelection() != wx.NOT_FOUND:
+            filter_temp.cmd_size1 = self.cmb_fsiz1.GetSelection()
+
+        try:
+            filter_temp.file_size1 = int(self.txt_fsiz1.GetLineText(0))
+        except:
+            error_text = "File size(1) contains invalid value"
+
+        filter_temp.size1_and_size2 = 0
+        if self.cmb_fcmd2.GetSelection() != wx.NOT_FOUND:
+            filter_temp.size1_and_size2 = self.cmb_fcmd2.GetSelection()
+
+        filter_temp.cmd_size2 = 0
+        if self.cmb_fsiz2.GetSelection() != wx.NOT_FOUND:
+            filter_temp.cmd_size2 = self.cmb_fsiz2.GetSelection()
+
+        try:
+            filter_temp.file_size2 = int(self.txt_fsiz2.GetLineText(0))
+        except:
+            error_text = "File size(2) contains invalid value"
+
+        if error_text:
+            dlg = wx.MessageDialog(self, error_text, "Error", style=wx.OK|wx.ICON_ERROR)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+
+        self.filter_data.exclude_files = filter_temp.exclude_files
+        self.filter_data.file_names = filter_temp.file_names
+        self.filter_data.file_and_dir = filter_temp.file_and_dir
+        self.filter_data.dir_names = filter_temp.dir_names
+        self.filter_data.cmd_size1 = filter_temp.cmd_size1
+        self.filter_data.file_size1 = filter_temp.file_size1
+        self.filter_data.size1_and_size2 = filter_temp.size1_and_size2
+        self.filter_data.cmd_size2 = filter_temp.cmd_size2
+        self.filter_data.file_size2 = filter_temp.file_size2
+
+        self.EndModal(wx.ID_OK)
 
 #---------------------------------------------------------------------------
 
@@ -140,5 +211,12 @@ if __name__ == "__main__" :
     
     dlg = FilterDialog(None, filter1)
     val = dlg.ShowModal()
+    if val == wx.ID_OK:
+        print("You pressed OK")
+    else:
+        print("You pressed Cancel")
+
+    print(filter1.dir_names)
+
     dlg.Destroy()
     app.MainLoop() 
