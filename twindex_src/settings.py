@@ -45,3 +45,19 @@ class Settings:
         if category not in self.config:
             self.config[category] = {}
         self.config[category][key] = value
+
+    def get_int(self, category, key, default = 0):
+        val = default
+        if category in self.config:
+            txt = self.config[category].get(key)
+            if txt and len(txt) > 0:
+                try:
+                    val = int(txt)
+                except:
+                    val = default
+        return val
+
+    def set_int(self, category, key, value):
+        if category not in self.config:
+            self.config[category] = {}
+        self.config[category][key] = str(value)

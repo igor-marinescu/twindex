@@ -24,10 +24,26 @@ class FilterData:
         self.size1_and_size2 = 0
 
     def load(self, settings, filter_name):
+        self.exclude_files = settings.get_int(filter_name, "exclude_files")
         self.file_names = settings.get_text(filter_name, "file_names")
+        self.dir_names = settings.get_text(filter_name, "dir_names")
+        self.file_and_dir = settings.get_int(filter_name, "file_and_dir")
+        self.cmd_size1 = settings.get_int(filter_name, "cmd_size1")
+        self.file_size1 = settings.get_int(filter_name, "file_size1")
+        self.cmd_size2 = settings.get_int(filter_name, "cmd_size2")
+        self.file_size2 = settings.get_int(filter_name, "file_size2")
+        self.size1_and_size2 = settings.get_int(filter_name, "size1_and_size2")
 
     def save(self, settings, filter_name):
+        settings.set_int(filter_name, "exclude_files", self.exclude_files)
         settings.set_text(filter_name, "file_names", self.file_names)
+        settings.set_text(filter_name, "dir_names", self.dir_names)
+        settings.set_int(filter_name, "file_and_dir", self.file_and_dir)
+        settings.set_int(filter_name, "cmd_size1", self.cmd_size1)
+        settings.set_int(filter_name, "file_size1", self.file_size1)
+        settings.set_int(filter_name, "cmd_size2", self.cmd_size2)
+        settings.set_int(filter_name, "file_size2", self.file_size2)
+        settings.set_int(filter_name, "size1_and_size2", self.size1_and_size2)
 
 #
 # [Only Files/Exclude Files V]
