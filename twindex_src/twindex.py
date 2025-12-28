@@ -4,6 +4,7 @@ import settings
 import twin_finder
 import subprocess
 import filter
+import filter_list
 
 # class MyFrame
 # class MyApp
@@ -96,6 +97,14 @@ class MyFrame(wx.Frame):
 
         self.enable_buttons()
 
+        # Load filters
+        self.filter_list = []
+        filters_cnt = self.settings.get_int("filters", "count")
+        for idx in range(filters_cnt):
+            f = filter.FilterData()
+            f.load(self.settings, f"filter{str(idx)}")
+            self.filter_list.append(f)
+
     #---------------------------------------------------------------------------
     def enable_buttons(self, enable=None):
         """ Enable or disable Open/Delete buttons
@@ -120,6 +129,11 @@ class MyFrame(wx.Frame):
         """ Event called when Frame is closed
             Save the settings and destroy the Frame
         """
+
+        self.settings.set_int("filters", "count", len(self.filter_list))
+        for idx, f in enumerate(self.filter_list):
+            f.save(self.settings, f"filter{str(idx)}")
+
         self.settings.set_text("ui", "dir1", self.txt_dir1.GetLineText(0))
         self.settings.set_text("ui", "dir2", self.txt_dir2.GetLineText(0))
         self.settings.write()
@@ -291,12 +305,10 @@ class MyFrame(wx.Frame):
         """ Event called when Search Button is pressed
             Invoke TwinFinder and search for duplicate files
         """
-        filter1 = filter.FilterData()
-        filter1.load(self.settings, "Filter1")
-        dlg = filter.FilterDialog(self, filter1)
-        res = dlg.ShowModal()
-        if res == wx.ID_OK:
-             filter1.save(self.settings, "Filter1")
+        dlg = filter_list.FilterListDialog(None, self.filter_list)
+        val = dlg.ShowModal()
+        if val == wx.ID_OK:
+            print("OK pressed")
         dlg.Destroy()
 
 #---------------------------------------------------------------------------

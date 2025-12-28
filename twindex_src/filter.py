@@ -9,10 +9,10 @@ or_and_cmd = ["OR", "AND"]
 only_exclude_list = ["Only Files", "Exclude Files"]
 file_size_cmd_list = ["", "==", ">", "<", "!="]
 
-
 class FilterData:
 
     def __init__(self):
+        self.enabled = False
         self.exclude_files = 0
         self.file_names = ""
         self.dir_names = ""
@@ -23,7 +23,45 @@ class FilterData:
         self.file_size2 = 0
         self.size1_and_size2 = 0
 
+    def generate_name(self):
+        """ Generate a filter name based on its fields
+        """
+
+        # File names and Dir names
+        name1 = ""
+        if self.file_names and self.dir_names:
+            name1 = f"'{self.file_names}' {or_and_cmd[self.file_and_dir]} {self.dir_names}"
+        elif self.file_names:
+            name1 = f"'{self.file_names}'"
+        elif self.dir_names:
+            name1 = f"'{self.dir_names}'"
+
+        # File size
+        name2 = ""
+        if self.cmd_size1 and self.cmd_size2:
+            name2 = f"size {file_size_cmd_list[self.cmd_size1]} {str(self.file_size1)}"
+            name2 += f" {or_and_cmd[self.size1_and_size2]} "
+            name2 += f"size {file_size_cmd_list[self.cmd_size2]} {str(self.file_size2)}"
+        elif self.cmd_size1:
+            name2 = f"size {file_size_cmd_list[self.cmd_size1]} {str(self.file_size1)}"
+        elif self.cmd_size2:
+            name2 = f"size {file_size_cmd_list[self.cmd_size2]} {str(self.file_size2)}"
+
+        # Empty?
+        if not name1 and not name2:
+            return "<Empty>"
+        
+        name = f"{only_exclude_list[self.exclude_files]} : "
+        if name1 and name2:
+            name += f"({name1}) AND ({name2})"
+        elif name1:
+            name += name1
+        elif name2:
+            name += name2
+        return name
+
     def load(self, settings, filter_name):
+        self.enabled = settings.get_flag(filter_name, "enabled")
         self.exclude_files = settings.get_int(filter_name, "exclude_files")
         self.file_names = settings.get_text(filter_name, "file_names")
         self.dir_names = settings.get_text(filter_name, "dir_names")
@@ -35,6 +73,7 @@ class FilterData:
         self.size1_and_size2 = settings.get_int(filter_name, "size1_and_size2")
 
     def save(self, settings, filter_name):
+        settings.set_flag(filter_name, "enabled", self.enabled)
         settings.set_int(filter_name, "exclude_files", self.exclude_files)
         settings.set_text(filter_name, "file_names", self.file_names)
         settings.set_text(filter_name, "dir_names", self.dir_names)

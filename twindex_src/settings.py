@@ -61,3 +61,23 @@ class Settings:
         if category not in self.config:
             self.config[category] = {}
         self.config[category][key] = str(value)
+
+    def get_flag(self, category, key, default = False):
+        val = default
+        if category in self.config:
+            txt = self.config[category].get(key)
+            if txt and len(txt) > 0:
+                try:
+                    if int(txt) > 0:
+                        val = True
+                except:
+                    val = default
+        return val
+
+    def set_flag(self, category, key, value):
+        if category not in self.config:
+            self.config[category] = {}
+        val_int = 0
+        if value:
+            val_int = 1
+        self.config[category][key] = str(val_int)
