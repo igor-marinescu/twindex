@@ -1,5 +1,7 @@
 import wx
 import settings
+import fnmatch
+import os
 
 # class MyFrame
 # class MyApp
@@ -84,6 +86,47 @@ class FilterData:
         settings.set_int(filter_name, "file_size2", self.file_size2)
         settings.set_int(filter_name, "size1_and_size2", self.size1_and_size2)
 
+    def check(self, file_name, file_size):
+
+        if not self.enabled:
+            return False
+        
+        file_match_flag = False
+        dir_match_flag = False
+
+        # Convert "*.txt; *.jpg; some*" -> ["*.txt", "*.jpg", "some*"]
+        flt_file_names = self.file_names.split(";")
+        flt_dir_names = self.file_names.split(";")
+
+        # Split "C:\\hello\\world.txt" -> "C:\\hello", "world.txt"
+        file_name_head, file_name_tail = os.path.split(file_name)
+
+        # Check if file_name tail matches any of the file filters
+        for flt in flt_file_names:
+            flt.strip()
+            if flt and fnmatch.fnmatch(file_name_tail, flt):
+                print(file_name_tail, "matches", flt)
+                file_match_flag = False
+                break
+
+        # Check if file_name head matches any of the dir filters
+        for flt in flt_dir_names:
+            flt.strip()
+            if flt and fnmatch.fnmatch(file_name_head, flt):
+                print(file_name_head, "matches", flt)
+                dir_match_flag = False
+                break
+
+        if flt_file_names and flt_dir_names:
+            if self.file_and_dir:
+                return file_match_flag and dir_match_flag
+            else:
+                return file_match_flag or dir_match_flag
+        elif flt_file_names:
+            return file_match_flag
+        elif flt_dir_names:
+            return dir_match_flag
+        return False
 #
 # [Only Files/Exclude Files V]
 #   -------------------------
@@ -262,12 +305,14 @@ if __name__ == "__main__" :
     app = wx.App()
 
     filter1 = FilterData()
+    filter1.enabled = True
     filter1.file_names = "*.txt"
     
     dlg = FilterDialog(None, filter1)
     val = dlg.ShowModal()
     if val == wx.ID_OK:
         print("You pressed OK")
+        filter1.check("C:\\hello\\world.txt", 0)
     else:
         print("You pressed Cancel")
 
